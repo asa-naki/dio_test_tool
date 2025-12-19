@@ -36,7 +36,12 @@ class AppState(object):
 app_state = AppState()
 
 def get_ports():
-    return serial.tools.list_ports.comports()
+    """シリアルポートを取得（実デバイスのみ表示）"""
+    ports = list(serial.tools.list_ports.comports())
+    # ttyACM*, ttyUSB* のみ表示（実際のデバイス）
+    # ttyS* は仮想シリアルポートなので除外
+    real_devices = [p for p in ports if 'ttyACM' in p.device or 'ttyUSB' in p.device]
+    return real_devices
 
 def create_cmd(cmd_arr: typing.List[PinState]):
     cmd_str_arr = [str(c.value) for c in cmd_arr]
@@ -90,7 +95,7 @@ class MainWindow:
     def __init__(self):
         # レイアウトからタイマーボタンを削除
         layout = [
-            [sg.Combo(values=["None"], key='serial-ports', default_value="", size=(40, 1)),
+            [sg.Combo(values=["None"], key='serial-ports', default_value="", size=(50, 10)),
              sg.Button(button_text="接続", key='connect-btn')],
             [sg.Text('Digital Out 指示値:')],
             [*[sg.Text(f"Port{i+1}", size=(6, 1)) for i in range(DO_PORT_NUM)]],
